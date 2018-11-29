@@ -1,20 +1,29 @@
 ﻿const dgram = require('dgram');
 const udpSocket = dgram.createSocket('udp4');
-const {parseIn, parseOut} = require('./flprogUDPParser')
+const {parseIn, parseOut} = require('./utils/flprogUDPParser');
+const socketController = require('./controllers/socketController');
 const jsonfile = require('jsonfile');
 
 async function main() {
 
-let config = await jsonfile.readFile('./config.json');  
+const config = await jsonfile.readFile('./config.json');
+
+console.log(config)
+
+const SocketController = new socketController(config, udpSocket);
 
 udpSocket.on('error', (err) => {
   console.log(`udpSocket error:\n${err}`);
-  udpSocket.close();
+  throw 1
 });
 
-udpSocket.on('message', (msg, rinfo) => {
-  console.log(`udpSocket got: ${msg} from ${rinfo.address}:${rinfo.port}`, Math.random());
-  sSender(msg.toString());
+udpSocket.on('message', (msg, rInfo) => {
+  console.log(`udpSocket got: ${msg} from ${rInfo.address}:${rInfo.port}`, Math.random());
+  let controllerId = config.controllers[rInfo.address]
+  if (controllerId) {
+    let data = parseIn(msg, controllerId);
+    SocketController.emitAction(data);
+  } 
 });
 
 udpSocket.on('listening', () => {
@@ -22,7 +31,7 @@ udpSocket.on('listening', () => {
   console.log(`udpSocket listening ${address.address}:${address.port}`);
 });
 
-udpSocket.bind(8888);
+udpSocket.bind(config.port);
 
 
 // setInterval(() => {

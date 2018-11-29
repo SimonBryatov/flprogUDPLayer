@@ -1,9 +1,10 @@
 {
-    "controllers": {
-        "192.168.1.51": 1,
-        "192.168.1.52": 2
-    },
     "port": 8888,
     "ip": "192.168.1.7",
-    "flprogCheckValue": ""
+    "controllers": {
+        "192.168.1.48": 1,
+        "127.0.0.1": 2
+    },
+    "mainHost": "http://udp.simon.keenetic.pro:777",
+    "flprogCheckValue": "133169674"
 }
