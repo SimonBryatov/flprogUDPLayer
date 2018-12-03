@@ -1,6 +1,6 @@
 ﻿const dgram = require('dgram');
 const udpSocket = dgram.createSocket('udp4');
-const {parseIn, parseOut} = require('./utils/flprogUDPParser');
+const {parseIn} = require('./utils/flprogUDPParser');
 const socketController = require('./controllers/socketController');
 const jsonfile = require('jsonfile');
 
@@ -18,10 +18,11 @@ udpSocket.on('error', (err) => {
 });
 
 udpSocket.on('message', (msg, rInfo) => {
-  console.log(`udpSocket got: ${msg} from ${rInfo.address}:${rInfo.port}`, Math.random());
   let controllerId = config.controllers[rInfo.address]
+  //console.log(msg.toString());
   if (controllerId) {
     let data = parseIn(msg, controllerId);
+    console.log(`Sending: ${rInfo.address}:${rInfo.port} ==>`, data);
     SocketController.emitAction(data);
   } 
 });
@@ -33,17 +34,13 @@ udpSocket.on('listening', () => {
 
 udpSocket.bind(config.port);
 
-
-// setInterval(() => {
-//       udpSocket.send("\u0001" + "23" + "\u0002" + a + "\u0003" + 133169674 + "\u0004", "8888", destIP, function(err) {
-//         if (err) {
-//           return console.log('Error on write: ', err.message);
-//         }
-//         a = Number(!a);
-//         //console.log('message written', a);
-//       });
-//    // udpSocket.send("alive", "41234")
-// }, 500)
 }
 
 main();
+
+//setTimeout(() => {throw new Error()}, 1000)
+
+process.on('uncaughtException', function (e) {
+  let errors = jsonfile.readFileSync('./errors.json')
+  jsonfile.writeFileSync('./errors.json', {...errors, [Date.now()]: e})
+});

@@ -9,12 +9,21 @@ class SocketController {
     
     constructor(config, udpSocket) {
         this.socket = io(config.mainHost);
-        this.socket.on('connection', () => {
-            this.socket.sendBuffer = [];
+        this.socket.on('connect', () => {
+            console.log('connected');
+        })
+        this.socket.on('disconnect', () => {
+            this.socket.sendBuffer=[];
+            console.log('disconnected')
         })
         this.socket.on('controller data', (data) => {
-            let controllerIP = getKeyByValue(config, data.controllerId);
+            try {
+            let controllerIP = getKeyByValue(config.controllers, data.controllerId);
+            console.log('received', data, '==>', controllerIP)
             if (controllerIP) udpSocket.send(parseOut(data.ind, data.value, config.flprogCheckValue), '8888', controllerIP, (err) => {})
+            } catch(err) {
+                //console.log(err)
+            }
         })
             
         this.emitAction = (data) => {
